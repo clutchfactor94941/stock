@@ -1,0 +1,234 @@
+import java.util.Optional;
+
+public class Stock {
+
+	//these values relate to the initial stock value
+	private String stockName;
+	private int stockLocation;
+	private double stockPrice;
+	private Market index;
+	private double beta;
+	
+	//
+	private double standardDeviation;
+	private double[] historicalPrice;
+	private double historicalAverage;
+
+	
+	
+	//these values relate to slightly more complex orders that you can set for various stocks
+	private int sharesPurchased;
+	private double orderLimitSellPrice;
+	private double orderStopLossPrice;
+	private double orderStopBuyPrice;
+	private int orderStopBuyQuantity;
+	private double orderLimitBuyPrice;
+	private int orderLimitBuyQuantity;
+	private double cash;
+	
+	public Stock()
+	{
+		
+	}
+	
+	public Stock(String name, double price)
+	{
+		stockName=name;
+		stockPrice=price;
+	}
+	
+	public void importName(String name)
+	{
+		stockName=name;
+	}
+	
+	public void importHistoricalPrice(double[] history)
+	{
+		historicalPrice=history;
+	}
+	
+	
+	/*
+	 * This method will take the new information and update the values of the original stock
+	 * This also needs to test if the stop loss or limit sell option occured
+	 * if both occured then we need to find which happened first in the week
+	 * then we will sell our stocks at that price
+	 * 
+	 */
+	public void updateData()
+	{
+		
+	}
+	
+	
+	public void setLimitBuyOrder(double price, int quantity)
+	{
+		orderLimitBuyPrice=price;
+		orderLimitBuyQuantity=quantity;
+	}
+	
+	public void setLimitSellOrder(double price)
+	{
+		orderLimitSellPrice=price;
+	}
+	
+	public void setStopLossOrder(double price)
+	{
+		orderStopLossPrice=price;
+	}
+	
+	public void setStopBuyOrder(double price, int quantity)
+	{
+		orderStopBuyPrice=price;
+		orderStopBuyQuantity=quantity;
+	}
+	
+	/*
+	 * this sells the stock which equals price of stock times sharesPurchased
+	 * also needs to test if a stop loss or limit sell order occurred
+	 */
+	public double sellStock()
+	{
+		double cash = sharesPurchased*stockPrice;
+		return cash;
+	}
+	
+	/*
+	 * This method will take in the high during the week if it is above the limit sell price
+	 * then we sell it at the limit sell price
+	 */
+	public Optional<Double> limitSell(double High)
+	{
+		if(sharesPurchased>0)
+		{
+			if(High>orderLimitSellPrice)
+			{
+				cash=orderLimitSellPrice*sharesPurchased;
+				sharesPurchased=0;
+				return Optional.of(cash);
+			}
+		}
+		return Optional.empty();
+		
+	}
+	
+	/*
+	 * this method will check to see if the low price of the period is below the stop loss price
+	 * then it will sell the stock at the stop loss price
+	 */
+	
+	public Optional<Double> stopLoss(double low)
+	{
+		if(sharesPurchased>0)
+		{
+			if(low<orderStopLossPrice)
+			{
+				cash=orderStopLossPrice*sharesPurchased;
+				sharesPurchased=0;
+				return Optional.of(cash);
+			}
+		}
+		return Optional.empty();
+	}
+	
+	/*
+	 * this method will buy a new stock so it will spend the money available to buy x number of stocks
+	 * cash reserves decrease
+	 * and the number of shares we have increases
+	 */
+	public Optional<Double> buyStock(double price, int quantity)
+	{
+		if(cash>=0)
+		{
+			if(cash>quantity*price)
+			{
+				cash=cash-quantity*price;
+				sharesPurchased=quantity;
+				stockPrice=price;
+				return Optional.ofNullable(cash);
+			}
+			else
+			{
+				if(cash>price)
+				{
+					cash=cash-(int)(cash/price);
+					sharesPurchased= (int)(cash/price);
+					return Optional.of(cash);
+				}
+				return Optional.empty();
+			}
+		}
+		return Optional.empty();
+		
+	}
+	
+	/*
+	 * the limit buy method will buy stock if prices fall below a limit
+	 * in order for this to happen there needs to be enough money to purchase the stocks
+	 * so cash reserves decrease 
+	 * and the number of share increases
+	 */
+	public Optional<Double> limitBuy(double low, int quantity)
+	{
+		if(low<orderLimitBuyPrice)
+		{
+			buyStock(orderLimitBuyPrice,orderLimitBuyQuantity);
+			return Optional.of(cash);
+		}
+		return Optional.empty();
+	}
+	
+	/*
+	 * the stop buy method will go into effect if the stock price rises above a limit price
+	 * only if there is the cash to buy stocks
+	 * cash goes down
+	 * and number of shares increases
+	 */
+	public Optional<Double> stopBuy(double high)
+	{
+		if(high>orderStopBuyPrice)
+		{
+			buyStock(orderStopBuyPrice,orderStopBuyQuantity);
+			return Optional.of(cash);
+		}
+		return Optional.empty();
+	}
+	
+	public Optional<Double> dividendPayment(double dividend)
+	{
+		cash=cash+dividend*sharesPurchased;
+		return Optional.of(cash);
+	}
+	
+	/*
+	 * the get name method will return the name of a particular stock
+	 */
+	public String getName()
+	{
+		return stockName;
+	}
+	
+	
+	
+	/*
+	 * the return stock location function will return the stock location in the overall marker
+	 * of this stock in the overall market 
+	 * so if apple is the 3rd stock in the S&P 500 index then its stockLocation will
+	 * be 3
+	 */
+	public int getStockLocation()
+	{
+		return stockLocation;
+	}
+	
+	public double getPurchaseStockPrice()
+	{
+		return stockPrice;
+	}
+	
+	/*
+	 * this method will determine the market covariance or beta relative to the overall market
+	 */
+	
+	
+}
